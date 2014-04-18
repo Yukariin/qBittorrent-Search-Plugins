@@ -1,4 +1,4 @@
-#VERSION: 2.11
+#VERSION: 2.20
 #AUTHORS: Yukarin (yukariin@yandex.ru)
 
 # Redistribution and use in source and binary forms, with or without
@@ -25,10 +25,10 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from html.parser import HTMLParser
 
 from novaprinter import prettyPrinter
 from helpers import retrieve_url, download_file
+from sgmllib3 import SGMLParser
 
 
 class nyaatorrents(object):
@@ -41,37 +41,37 @@ class nyaatorrents(object):
     def download_torrent(self, info):
         print(download_file(info))
 
-    class SimpleHTMLParser(HTMLParser):
+    class SimpleSGMLParser(SGMLParser):
         def __init__(self, results, url):
-            HTMLParser.__init__(self)
+            SGMLParser.__init__(self)
             self.td_counter = None
             self.current_item = None
             self.results = results
             self.url = url
 
-        def handle_starttag(self, tag, attrs):
-            if tag == 'a':
-                for attr in attrs:
-                    if 'href' in attr[0]:
-                        if 'page=download' in attr[1]:
-                            self.current_item['link'] = attr[1].strip()
-                        elif 'page=view' in attr[1]:
-                            self.current_item = {}
-                            self.td_counter = 0
-                            self.current_item['desc_link'] = attr[1].strip()
-            elif tag == 'td':
-                if isinstance(self.td_counter, int):
-                    self.td_counter += 1
-                    if self.td_counter > 4:
-                        self.td_counter = None
-                        if self.current_item:
-                            self.current_item['engine_url'] = self.url
-                            if not self.current_item['seeds'].isdigit():
-                                self.current_item['seeds'] = 0
-                            if not self.current_item['leech'].isdigit():
-                                self.current_item['leech'] = 0
-                            prettyPrinter(self.current_item)
-                            self.results.append('a')
+        def start_a(self, attr):
+            params = dict(attr)
+            if 'href' in params:
+                if 'page=download' in params['href']:
+                    self.current_item['link'] = attr[1].strip()
+                elif 'page=view' in params['href']:
+                    self.current_item = {}
+                    self.td_counter = 0
+                    self.current_item['desc_link'] = attr[1].strip()
+
+        def start_td(self, attr):
+            if isinstance(self.td_counter, int):
+                self.td_counter += 1
+                if self.td_counter > 4:
+                    self.td_counter = None
+                    if self.current_item:
+                        self.current_item['engine_url'] = self.url
+                        if not self.current_item['seeds'].isdigit():
+                            self.current_item['seeds'] = 0
+                        if not self.current_item['leech'].isdigit():
+                            self.current_item['leech'] = 0
+                        prettyPrinter(self.current_item)
+                        self.results.append('a')
 
         def handle_data(self, data):
             if self.td_counter == 0:
@@ -95,7 +95,7 @@ class nyaatorrents(object):
         i = 1
         while True and i < 11:
             results = []
-            parser = self.SimpleHTMLParser(results, self.url)
+            parser = self.SimpleSGMLParser(results, self.url)
             dat = retrieve_url(self.url + '/?page=search&term=%s&offset=%d&cats=%s' % (what, i, self.supported_categories[cat]))
             parser.feed(dat)
             parser.close()
