@@ -1,4 +1,4 @@
-#VERSION: 2.20
+#VERSION: 2.22
 #AUTHORS: Yukarin (yukariin@yandex.ru)
 
 # Redistribution and use in source and binary forms, with or without
@@ -53,25 +53,11 @@ class nyaatorrents(object):
             params = dict(attr)
             if 'href' in params:
                 if 'page=download' in params['href']:
-                    self.current_item['link'] = attr[1].strip()
+                    self.current_item['link'] = params['href'].strip()
                 elif 'page=view' in params['href']:
                     self.current_item = {}
                     self.td_counter = 0
-                    self.current_item['desc_link'] = attr[1].strip()
-
-        def start_td(self, attr):
-            if isinstance(self.td_counter, int):
-                self.td_counter += 1
-                if self.td_counter > 4:
-                    self.td_counter = None
-                    if self.current_item:
-                        self.current_item['engine_url'] = self.url
-                        if not self.current_item['seeds'].isdigit():
-                            self.current_item['seeds'] = 0
-                        if not self.current_item['leech'].isdigit():
-                            self.current_item['leech'] = 0
-                        prettyPrinter(self.current_item)
-                        self.results.append('a')
+                    self.current_item['desc_link'] = params['href'].strip()
 
         def handle_data(self, data):
             if self.td_counter == 0:
@@ -90,6 +76,20 @@ class nyaatorrents(object):
                 if 'leech' not in self.current_item:
                     self.current_item['leech'] = ''
                 self.current_item['leech'] += data.strip()
+
+        def start_td(self, attr):
+            if isinstance(self.td_counter, int):
+                self.td_counter += 1
+                if self.td_counter > 4:
+                    self.td_counter = None
+                    if self.current_item:
+                        self.current_item['engine_url'] = self.url
+                        if not self.current_item['seeds'].isdigit():
+                            self.current_item['seeds'] = 0
+                        if not self.current_item['leech'].isdigit():
+                            self.current_item['leech'] = 0
+                        prettyPrinter(self.current_item)
+                        self.results.append('a')
 
     def search(self, what, cat='all'):
         i = 1
