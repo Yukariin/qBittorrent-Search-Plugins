@@ -1,4 +1,4 @@
-#VERSION: 2.22
+#VERSION: 2.23
 #AUTHORS: Yukarin (yukariin@yandex.ru)
 
 # Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,10 @@
 
 from novaprinter import prettyPrinter
 from helpers import retrieve_url, download_file
-from sgmllib3 import SGMLParser
+try:
+    from sgmllib import SGMLParser
+except ImportError:
+    from sgmllib3 import SGMLParser
 
 
 class nyaatorrents(object):
