@@ -1,4 +1,4 @@
-#VERSION: 2.23
+#VERSION: 2.26
 #AUTHORS: Yukarin (yukariin@yandex.ru)
 
 # Redistribution and use in source and binary forms, with or without
@@ -29,9 +29,9 @@
 from novaprinter import prettyPrinter
 from helpers import retrieve_url, download_file
 try:
-    from sgmllib import SGMLParser
+    from HTMLParser import HTMLParser
 except ImportError:
-    from sgmllib3 import SGMLParser
+    from html.parser import HTMLParser
 
 
 class nyaatorrents(object):
@@ -44,46 +44,36 @@ class nyaatorrents(object):
     def download_torrent(self, info):
         print(download_file(info))
 
-    class SimpleSGMLParser(SGMLParser):
+    class NTParser(HTMLParser):
         def __init__(self, results, url):
-            SGMLParser.__init__(self)
+            HTMLParser.__init__(self)
             self.td_counter = None
             self.current_item = None
             self.results = results
             self.url = url
 
-        def start_a(self, attr):
-            params = dict(attr)
+        def handle_starttag(self, tag, attrs):
+            if tag == 'a':
+                self.start_a(attrs)
+            elif tag == 'td':
+                self.start_td(attrs)
+
+        def start_a(self, attrs):
+            params = dict(attrs)
             if 'href' in params:
-                if 'page=download' in params['href']:
+                # first item is category icon - init counter and current item buff
+                if 'cats=' in params['href']:
+                    self.td_counter = 0
+                    self.current_item = {}
+                elif 'page=download' in params['href']:
                     self.current_item['link'] = params['href'].strip()
                 elif 'page=view' in params['href']:
-                    self.current_item = {}
-                    self.td_counter = 0
                     self.current_item['desc_link'] = params['href'].strip()
 
-        def handle_data(self, data):
-            if self.td_counter == 0:
-                if 'name' not in self.current_item:
-                    self.current_item['name'] = ''
-                self.current_item['name'] += data
-            elif self.td_counter == 2:
-                if 'size' not in self.current_item:
-                    self.current_item['size'] = ''
-                self.current_item['size'] += data.strip()
-            elif self.td_counter == 3:
-                if 'seeds' not in self.current_item:
-                    self.current_item['seeds'] = ''
-                self.current_item['seeds'] += data.strip()
-            elif self.td_counter == 4:
-                if 'leech' not in self.current_item:
-                    self.current_item['leech'] = ''
-                self.current_item['leech'] += data.strip()
-
-        def start_td(self, attr):
+        def start_td(self, attrs):
             if isinstance(self.td_counter, int):
                 self.td_counter += 1
-                if self.td_counter > 4:
+                if self.td_counter > 5:
                     self.td_counter = None
                     if self.current_item:
                         self.current_item['engine_url'] = self.url
@@ -94,14 +84,33 @@ class nyaatorrents(object):
                         prettyPrinter(self.current_item)
                         self.results.append('a')
 
+        def handle_data(self, data):
+            if self.td_counter == 1:
+                if 'name' not in self.current_item:
+                    self.current_item['name'] = ''
+                self.current_item['name'] += data
+            elif self.td_counter == 3:
+                if 'size' not in self.current_item:
+                    self.current_item['size'] = ''
+                self.current_item['size'] += data.strip()
+            elif self.td_counter == 4:
+                if 'seeds' not in self.current_item:
+                    self.current_item['seeds'] = ''
+                self.current_item['seeds'] += data.strip()
+            elif self.td_counter == 5:
+                if 'leech' not in self.current_item:
+                    self.current_item['leech'] = ''
+                self.current_item['leech'] += data.strip()
+
     def search(self, what, cat='all'):
         i = 1
-        while True and i < 11:
-            results = []
-            parser = self.SimpleSGMLParser(results, self.url)
+        results = []
+        parser = self.NTParser(results, self.url)
+        while i < 101:
             dat = retrieve_url(self.url + '/?page=search&term=%s&offset=%d&cats=%s' % (what, i, self.supported_categories[cat]))
             parser.feed(dat)
-            parser.close()
             if len(results) <= 0:
                 break
+            del results[:]
             i += 1
+        parser.close()
