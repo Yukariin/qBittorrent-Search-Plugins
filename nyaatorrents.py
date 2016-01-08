@@ -1,5 +1,5 @@
-#VERSION: 2.26
-#AUTHORS: Yukarin (yukariin@yandex.ru)
+# VERSION: 2.26
+# AUTHORS: Yukarin (yukariin@yandex.ru)
 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -25,21 +25,28 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-
-from novaprinter import prettyPrinter
-from helpers import retrieve_url, download_file
 try:
+    # python2
     from HTMLParser import HTMLParser
 except ImportError:
+    # python3
     from html.parser import HTMLParser
+
+# qBt
+from novaprinter import prettyPrinter
+from helpers import retrieve_url, download_file
 
 
 class nyaatorrents(object):
     url = 'http://www.nyaa.se'
     name = 'Nyaatorrents'
-    supported_categories = {'all': '0_0', 'anime': '1_0', 'books': '2_0',
-                            'music': '3_0', 'pictures': '4_0',
-                            'software': '6_0', 'games': '6_24'}
+    supported_categories = {'all': '0_0',
+                            'anime': '1_0',
+                            'books': '2_0',
+                            'music': '3_0',
+                            'pictures': '4_0',
+                            'software': '6_0',
+                            'games': '6_24'}
 
     def download_torrent(self, info):
         print(download_file(info))
@@ -107,7 +114,8 @@ class nyaatorrents(object):
         results = []
         parser = self.NTParser(results, self.url)
         while i < 101:
-            dat = retrieve_url(self.url + '/?page=search&term=%s&offset=%d&cats=%s' % (what, i, self.supported_categories[cat]))
+            dat = retrieve_url(
+                self.url + '/?page=search&term=%s&offset=%d&cats=%s' % (what, i, self.supported_categories[cat]))
             parser.feed(dat)
             if len(results) <= 0:
                 break
