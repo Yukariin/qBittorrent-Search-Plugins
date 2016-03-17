@@ -1,4 +1,4 @@
-#VERSION: 2.28
+#VERSION: 2.29
 #AUTHORS: Yukarin (yukariin@yandex.ru)
 
 # Redistribution and use in source and binary forms, with or without
@@ -113,9 +113,9 @@ class nyaatorrents(object):
         i = 1
         results = []
         parser = self.NTParser(results, self.url)
-        while i < 101:
+        while i < 51:
             dat = retrieve_url(
-                self.url + '/?page=search&term=%s&offset=%d&cats=%s' % (what, i, self.supported_categories[cat]))
+                '%s/?page=search&term=%s&offset=%d&cats=%s' % (self.url, what, i, self.supported_categories[cat]))
             parser.feed(dat)
             if len(results) <= 0:
                 break
