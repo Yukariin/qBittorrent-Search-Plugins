@@ -1,4 +1,4 @@
-#VERSION: 2.27
+#VERSION: 2.28
 #AUTHORS: Yukarin (yukariin@yandex.ru)
 
 # Redistribution and use in source and binary forms, with or without
