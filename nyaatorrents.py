@@ -73,9 +73,9 @@ class nyaatorrents(object):
                     self.td_counter = 0
                     self.current_item = {}
                 elif 'page=download' in params['href']:
-                    self.current_item['link'] = params['href'].strip()
+                    self.current_item['link'] = 'https:' + params['href'].strip()
                 elif 'page=view' in params['href']:
-                    self.current_item['desc_link'] = params['href'].strip()
+                    self.current_item['desc_link'] = 'https:' + params['href'].strip()
 
         def start_td(self, attrs):
             if isinstance(self.td_counter, int):
